@@ -9,14 +9,18 @@ from PIL import Image
 
 
 class Dataset:
-    def __init__(self, data_name='mnist', preferred_size=None, invert_color_scale_flag=False):
+    def __init__(
+        self, data_directory='../Datasets/', data_name='mnist', 
+        preferred_size=None, invert_color_scale_flag=False
+    ):
+        self.data_directory = data_directory
         self.data_name = data_name
         self.preferred_size = preferred_size
         self.invert_color_scale_flag = invert_color_scale_flag
     
     
     def load_data(self):
-        data = np.load("Data/Affectnet-Dataset/affectnet_dataset.npz", allow_pickle=True)
+        data = np.load(self.data_directory+"Affectnet-Dataset/affectnet_dataset.npz", allow_pickle=True)
         self.x_train = data['arr_0']/255.
         self.y_train = data['arr_1']
         self.x_test = data['arr_2']/255.
@@ -29,7 +33,7 @@ class Dataset:
         
     
     def load_train_batch(self, batch_number):
-        data = np.load("Data/Affectnet-Dataset/affectnet_train_set_"+str(batch_number)+".npz")
+        data = np.load(self.data_directory+"Affectnet-Dataset/affectnet_train_set_"+str(batch_number)+".npz")
         self.x_train_batch = data['arr_0']
         self.y_train_batch = data['arr_1']
         self.y_train_batch = utils.to_categorical(self.y_train_batch, self.y_test.shape[1])
@@ -40,7 +44,7 @@ class Dataset:
         
     
     def load_test_data(self):
-        data_ = np.load("Data/Affectnet-Dataset/affectnet_test_set.npz", allow_pickle=True)
+        data_ = np.load(self.data_directory+"Affectnet-Dataset/affectnet_test_set.npz", allow_pickle=True)
         self.x_test = data_['arr_0']
         self.y_test = data_['arr_1']
         self.y_test = utils.to_categorical(self.y_test, np.max(self.y_test)+1)
@@ -63,9 +67,7 @@ class Dataset:
     
     def load_and_prepare_data(self):
         data_loader = {
-            "fmnist": tf.keras.datasets.fashion_mnist.load_data,
             "mnist": tf.keras.datasets.mnist.load_data,
-            "cifar10": tf.keras.datasets.cifar10.load_data,
             "Affectnet-Dataset": self.get_data
         }
         (x_train, y_train), (x_test, y_test) = data_loader[self.data_name]()
@@ -85,14 +87,14 @@ class Dataset:
     
     def get_data(self):
         directories = ['/Train/', '/Test/']#, '/Validation/']
-        class_names = os.listdir('Data/'+self.data_name+'/Train/')
+        class_names = os.listdir(self.data_directory+self.data_name+'/Train/')
 
         inputs = []
         outputs = []
         for directory in directories:
             images = []
             labels = []
-            data_path = 'Data/'+self.data_name+directory
+            data_path = self.data_directory+self.data_name+directory
             for class_num,class_name in enumerate(class_names):
                 for file_name in os.listdir(data_path+class_name):
                     image_ = Image.open(data_path+class_name+'/'+file_name).convert('RGB')
